@@ -1,0 +1,61 @@
+<%- include('partials/header', { pageTitle: 'Debug Order' }) %>
+
+  <div class="container mt-4">
+    <h2>Debug Order Lookup</h2>
+    <% if (error) { %>
+      <div class="alert alert-danger"><%= error %></div>
+    <% } %>
+    <div class="mb-3">
+      <a href="/admin/orders" class="btn btn-secondary">Back to Orders</a>
+    </div>
+
+    <% if (order) { %>
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="card-title">Order ID: <%= order.order_id %></h5>
+          <p class="mb-1"><strong>User:</strong> <%= order.user_name || order.user_email || 'N/A' %></p>
+          <p class="mb-1"><strong>Email:</strong> <%= order.user_email || 'N/A' %></p>
+          <p class="mb-1"><strong>Address:</strong> <%= order.address || 'N/A' %></p>
+          <p class="mb-1"><strong>Contact:</strong> <%= order.contact || 'N/A' %></p>
+          <p class="mb-1"><strong>Total:</strong> $<%= order.total != null ? Number(order.total).toFixed(2) : '0.00' %></p>
+          <p class="mb-1"><strong>Created At:</strong> <%= order.created_at %></p>
+        </div>
+      </div>
+
+      <h5>Items</h5>
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Product</th>
+            <th>Product ID</th>
+            <th>Quantity</th>
+            <th>Price</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (items && items.length) { %>
+            <% items.forEach(function(it, idx) { %>
+              <tr>
+                <td><%= idx + 1 %></td>
+                <td><%= it.product_name %></td>
+                <td><%= it.product_id %></td>
+                <td><%= it.quantity %></td>
+                <td>$<%= it.price != null ? Number(it.price).toFixed(2) : '0.00' %></td>
+              </tr>
+            <% }) %>
+          <% } else { %>
+            <tr><td colspan="5">No items found for this order.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+
+      <form method="POST" action="/admin/orders/delete/<%= order.order_id %>" onsubmit="return confirm('Delete this order from DB?');">
+        <button type="submit" class="btn btn-danger">Delete Order (DB)</button>
+      </form>
+    <% } else { %>
+      <div class="alert alert-warning">No order data to display.</div>
+    <% } %>
+  </div>
+
+<%- include('partials/footer') %>

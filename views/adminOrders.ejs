@@ -1,0 +1,78 @@
+<%- include('partials/header', { pageTitle: 'Jeffery Market - All Orders' }) %>
+
+  <div class="container py-4">
+    <h1 class="text-center mb-4">All Purchase History</h1>
+    <% if (typeof messages !== 'undefined') { %>
+      <% if (messages.success && messages.success.length) { %>
+        <% messages.success.forEach(function(m){ %>
+          <div class="alert alert-success"><%= m %></div>
+        <% }); %>
+      <% } %>
+      <% if (messages.error && messages.error.length) { %>
+        <% messages.error.forEach(function(m){ %>
+          <div class="alert alert-danger"><%= m %></div>
+        <% }); %>
+      <% } %>
+    <% } %>
+
+    <% if (orders && orders.length) { %>
+      <div class="table-responsive mt-3">
+        <table class="table align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th style="width:60px;">#</th>
+              <th style="width:100px;">User</th>
+              <th>Product</th>
+              <th style="width:120px;">Quantity</th>
+              <th style="width:140px;">Total Paid</th>
+              <th style="width:180px;">Purchased At</th>
+              <th style="width:120px;"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% let rowNum = 0; %>
+            <% orders.forEach(function(o){ %>
+              <% o.items.forEach(function(it){ %>
+                <% rowNum++; %>
+                <% const userId = (o.user && (o.user.id || o.user.userId || o.user.user_id)) ? (o.user.id || o.user.userId || o.user.user_id) : null; %>
+                <tr style="background:#f6f7f8;">
+                  <td><%= rowNum %></td>
+                  <td><%= userId ? userId : (o.user && (o.user.username || o.user.email) ? (o.user.username || o.user.email) : 'guest') %></td>
+                  <td class="align-middle">
+                    <div class="d-flex align-items-center">
+                      <% if (it.image) { %>
+                        <img src="/images/<%= it.image %>" alt="<%= it.productName %>" style="width:48px;height:48px;object-fit:cover;margin-right:12px;border-radius:6px;">
+                      <% } else { %>
+                        <div style="width:48px;height:48px;background:#fff;margin-right:12px;border-radius:6px;border:1px solid #eee;display:inline-block;"></div>
+                      <% } %>
+                      <div>
+                        <div style="font-weight:600;"><%= it.productName %></div>
+                        <div class="text-muted small">Product ID: <%= it.id %></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td><%= Number(it.quantity) || 0 %></td>
+                  <% const priceNum = Number(it.price); const qtyNum = Number(it.quantity); const rowTotal = (isFinite(priceNum) ? priceNum : 0) * (isFinite(qtyNum) ? qtyNum : 0); %>
+                  <td>$<%= (isFinite(rowTotal) ? rowTotal.toFixed(2) : '0.00') %></td>
+                  <td><%= o.createdAt ? new Date(o.createdAt).toLocaleString() : '' %></td>
+                  <td>
+                    <form method="post" action="/admin/orders/delete" onsubmit="return confirm('Delete order <%= o.orderId %>?');">
+                      <input type="hidden" name="orderId" value="<%= o.orderId %>">
+                      <button class="btn btn-sm btn-danger">Delete</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    <% } else { %>
+      <p>No orders found.</p>
+    <% } %>
+
+    <div class="mt-4">
+      <a href="/inventory" class="btn btn-secondary">Back to Inventory</a>
+    </div>
+  </div>
+  <%- include('partials/footer') %>

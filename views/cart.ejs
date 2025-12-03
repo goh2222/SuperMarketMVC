@@ -1,0 +1,65 @@
+<%- include('partials/header', { pageTitle: 'Your Cart' }) %>
+
+  <!-- Cart Content -->
+  <div class="container">
+    <h2 class="mt-4">Shopping Cart</h2>
+    <% if (cart.length === 0) { %>
+      <p>Your cart is empty.</p>
+    <% } else { %>
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Image</th>
+            <th>Quantity</th>
+            <th>Total</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% let total = 0; %>
+          <% for (let i = 0; i < cart.length; i++) { %>
+            <tr>
+                <td><%= cart[i].productName %></td>
+                <td><img src="/images/<%= cart[i].image %>" width="80" class="img-thumbnail"></td>
+                <td><%= cart[i].quantity %></td>
+                <td>
+                  <% const disc = (cart[i].discount || 0) * 1; %>
+                  <% const original = (typeof cart[i].originalPrice !== 'undefined' ? Number(cart[i].originalPrice) : Number(cart[i].price)); %>
+                  <% const linePrice = Number(cart[i].price || 0) * Number(cart[i].quantity || 0); %>
+                  <% if (disc && disc > 0) { %>
+                    <div><small class="text-muted"><s>$<%= original.toFixed(2) %></s></small></div>
+                    <div>$<%= linePrice.toFixed(2) %> <small class="text-success">(<%= disc.toFixed(2) %>% off)</small></div>
+                  <% } else { %>
+                    $<%= linePrice.toFixed(2) %>
+                  <% } %>
+                </td>
+                <td>
+                  <form action="/remove-from-cart/<%= cart[i].id %>" method="POST" style="display:inline; margin:0;">
+                    <button type="submit" class="btn btn-danger btn-sm">Remove</button>
+                  </form>
+                </td>
+            </tr>
+            <% total += cart[i].price * cart[i].quantity; %>
+          <% }; %>
+        </tbody>
+      </table>
+      <h4>Total: $<%= total.toFixed(2) %></h4>
+      <div class="mt-4 d-flex gap-2">
+        <a href="/shopping" class="btn btn-secondary">Back to Shopping</a>
+        <a href="/confirm-payment" class="btn btn-success">Proceed to Payment Confirmation</a>
+      </div>
+    <% } %>
+    <script>
+      function disablePurchaseBtn() {
+        const btn = document.getElementById('purchase-btn');
+        if (btn) {
+          btn.disabled = true;
+          btn.innerText = 'Processing…';
+        }
+        // allow the form to submit
+        return true;
+      }
+    </script>
+  </div>
+<%- include('partials/footer') %>

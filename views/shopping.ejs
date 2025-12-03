@@ -1,0 +1,122 @@
+<%- include('partials/header', { pageTitle: 'Jeffery Market' }) %>
+
+  <div class="container">
+    <p>Welcome, <%= user.username %> (<%= user.role %>)</p>
+    <br>
+    <div class="text-center"><h2>Products from Jeffery Market</h2></div>
+    <br>
+    <!-- Category filter -->
+    <div class="row mb-3">
+      <div class="col-12 d-flex justify-content-center">
+        <form id="shopping-filter-form" class="form-inline" method="GET" action="/shopping" onsubmit="applyFilter(event)">
+          <label class="me-2 mt-1">Category:</label>
+          <select name="category" class="form-select me-2" style="width:200px; display:inline-block;" onchange="applyFilter()">
+            <option value="All" <%= (typeof selectedCategory === 'undefined' || selectedCategory === 'All') ? 'selected' : '' %>>All</option>
+            <% if (typeof categories !== 'undefined') { %>
+              <% categories.forEach(function(cat) { %>
+                <option value="<%= cat %>" <%= (typeof selectedCategory !== 'undefined' && String(selectedCategory).trim().toLowerCase() === String(cat).trim().toLowerCase()) ? 'selected' : '' %>><%= cat %></option>
+              <% }); %>
+            <% } %>
+          </select>
+          <label class="me-2 mt-1">Price:</label>
+          <input type="number" name="minPrice" class="form-control me-1" style="width:110px; display:inline-block;" placeholder="Min" step="0.01" min="0" value="<%= typeof minPrice !== 'undefined' ? minPrice : '' %>">
+          <span class="me-1 mt-2">-</span>
+          <input type="number" name="maxPrice" class="form-control me-2" style="width:110px; display:inline-block;" placeholder="Max" step="0.01" min="0" value="<%= typeof maxPrice !== 'undefined' ? maxPrice : '' %>">
+          <button type="button" id="shopping-filter-btn" class="btn btn-outline-primary" onclick="applyFilter()">Filter</button>
+        </form>
+      </div>
+    </div>
+    <div class="row g-4">
+      <% for (let i = 0; i < products.length; i++) { %>
+        <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+          <div class="product-card h-100 d-flex flex-column">
+            <div class="text-center">
+              <a href="/product/<%= products[i].id %>">
+                <img src="/images/<%= products[i].image %>" class="product-img" alt="<%= products[i].productName %>">
+              </a>
+            </div>
+            <div class="mt-2 flex-grow-1">
+              <h6 class="mb-1"><a href="/product/<%= products[i].id %>" class="text-dark"><%= products[i].productName %></a></h6>
+              <p class="mb-1 muted">Available: <strong><%= products[i].quantity %></strong></p>
+              <% if (products[i].category) { %>
+                <span class="badge bg-secondary"><%= products[i].category %></span>
+              <% } %>
+              <% if (products[i].description && String(products[i].description).trim().length) { %>
+                <% var desc = String(products[i].description).trim(); %>
+                <p class="mb-1 text-muted small"><%= desc.length > 100 ? (desc.substring(0,100) + '...') : desc %></p>
+              <% } %>
+            </div>
+            <div class="d-flex align-items-center justify-content-between mt-3">
+              <div>
+                <div class="input-group">
+                  <button type="button" class="btn btn-outline-secondary" onclick="decrementQty('<%= products[i].id %>', 1)">-</button>
+                  <input type="number" name="quantity" id="qty-<%= products[i].id %>" min="1" max="<%= products[i].quantity %>" value="1" class="form-control text-center" style="width:70px">
+                  <button type="button" class="btn btn-outline-secondary" onclick="incrementQty('<%= products[i].id %>', <%= products[i].quantity %>)">+</button>
+                </div>
+              </div>
+              <div class="text-end">
+                  <% const disc = (products[i].discount || 0) * 1; %>
+                  <% const discountedPrice = (isFinite(products[i].price) ? Number(products[i].price) : 0) * (1 - (isFinite(disc) ? disc / 100 : 0)); %>
+                  <% const showDiscount = disc && disc > 0; %>
+                  <div class="mb-2">
+                    <% if (showDiscount) { %>
+                      <div><small class="text-muted"><s>$<%= products[i].price.toFixed(2) %></s></small></div>
+                      <div><strong>$<%= discountedPrice.toFixed(2) %></strong> <small class="text-success">(<%= disc.toFixed(2) %>% off)</small></div>
+                    <% } else { %>
+                      <div><strong>$<%= products[i].price.toFixed(2) %></strong></div>
+                    <% } %>
+                  </div>
+                <form action="/add-to-cart/<%= products[i].id %>" method="POST" style="margin:0">
+                  <input type="hidden" name="quantity" id="hidden-qty-<%= products[i].id %>" value="1">
+                  <button type="submit" class="btn btn-primary">Add</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</body>
+<script>
+  function applyFilter(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault();
+    try {
+      const form = document.getElementById('shopping-filter-form');
+      const params = new URLSearchParams();
+      const category = form.querySelector('select[name="category"]').value;
+      if (category) params.set('category', category);
+      const min = form.querySelector('input[name="minPrice"]').value;
+      if (min !== undefined && min !== null && String(min).trim() !== '') params.set('minPrice', min);
+      const max = form.querySelector('input[name="maxPrice"]').value;
+      if (max !== undefined && max !== null && String(max).trim() !== '') params.set('maxPrice', max);
+      // Navigate to constructed URL
+      const url = '/shopping' + (params.toString() ? ('?' + params.toString()) : '');
+      window.location.href = url;
+    } catch (e) {
+      console.error('Filter apply error', e);
+      // Fallback: submit the form normally
+      const f = document.getElementById('shopping-filter-form');
+      if (f) f.submit();
+    }
+  }
+
+  // Quantity helpers used by product cards
+  function incrementQty(id, max) {
+    var input = document.getElementById('qty-' + id);
+    var hidden = document.getElementById('hidden-qty-' + id);
+    var val = parseInt(input.value) || 1;
+    if (val < max) val = val + 1;
+    input.value = val;
+    if (hidden) hidden.value = val;
+  }
+  function decrementQty(id, min) {
+    var input = document.getElementById('qty-' + id);
+    var hidden = document.getElementById('hidden-qty-' + id);
+    var val = parseInt(input.value) || 1;
+    if (val > min) val = val - 1;
+    input.value = val;
+    if (hidden) hidden.value = val;
+  }
+</script>
+<%- include('partials/footer') %>

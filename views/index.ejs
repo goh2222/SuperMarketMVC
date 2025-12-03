@@ -1,0 +1,25 @@
+<%- include('partials/header', { pageTitle: 'Jeffery Market' }) %>
+
+    <div class="container py-5">
+        <% if (user) {%>
+          <% if (user.role === "admin") { %>
+            <div class="text-center">
+              <h3 class="mb-3">Back to <a href="/inventory">inventory</a>!</h3>
+            </div>
+          <% } else { %>
+            <div class="text-center">
+              <h3 class="mb-3">Continue <a href="/shopping">Shopping</a>!</h3>
+            </div>
+          <% } %>
+        <% } else { %>
+          <div class="text-center">
+            <h1 class="display-4 fw-bold mb-3">Welcome to Jeffery Market!</h1>
+            <p class="lead mb-4">Please register or login to continue.</p>
+            <div class="d-flex justify-content-center gap-2">
+              <a href="/register" class="btn btn-primary btn-lg">Register</a>
+              <a href="/login" class="btn btn-outline-primary btn-lg">Login</a>
+            </div>
+          </div>
+        <% } %>
+    </div>
+  <%- include('partials/footer') %>

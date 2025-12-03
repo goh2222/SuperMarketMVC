@@ -1,0 +1,119 @@
+<%- include('partials/header', { pageTitle: 'Jeffery Market - Users' }) %>
+
+  <div class="container mt-4">
+    <h2 class="mb-3">Registered Users</h2>
+    <% if (messages && messages.error && messages.error.length) { %>
+      <div class="alert alert-danger"><%= messages.error.join('<br/>') %></div>
+    <% } %>
+    <% if (messages && messages.success && messages.success.length) { %>
+      <div class="alert alert-success"><%= messages.success.join('<br/>') %></div>
+    <% } %>
+
+    <div class="table-responsive">
+      <table class="table table-striped table-bordered">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Address</th>
+            <th>Contact</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr id="loading-row"><td colspan="6" class="text-center">Loading users...</td></tr>
+          <tr id="no-users-row" style="display:none;"><td colspan="6" class="text-center">No users found.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    // Client-side fetch to load users JSON and populate the table.
+    async function loadUsers() {
+      const tbody = document.querySelector('table.table tbody');
+      const loadingRow = document.getElementById('loading-row');
+      const noUsersRow = document.getElementById('no-users-row');
+      try {
+        const resp = await fetch('/admin/users.json', { credentials: 'same-origin' });
+        if (!resp.ok) {
+          const txt = await resp.text();
+          loadingRow.innerHTML = '<td colspan="6" class="text-center text-danger">Failed to load users: ' + resp.status + '</td>';
+          console.error('Failed to fetch /admin/users.json', resp.status, txt);
+          return;
+        }
+        const data = await resp.json();
+        loadingRow.style.display = 'none';
+        const users = Array.isArray(data.users) ? data.users : [];
+        if (!users.length) {
+          noUsersRow.style.display = '';
+          return;
+        }
+        users.forEach(u => {
+          const tr = document.createElement('tr');
+          const editUrl = '/admin/users/' + encodeURIComponent(u.id) + '/edit';
+          tr.innerHTML = `
+            <td>${escapeHtml(u.username || '')}</td>
+            <td>${escapeHtml(u.email || '')}</td>
+            <td>${escapeHtml(u.role || '')}</td>
+            <td>${escapeHtml(u.address || '')}</td>
+            <td>${escapeHtml(u.contact || '')}</td>
+            <td>
+              <a class="btn btn-sm btn-primary" href="${editUrl}">Edit</a>
+              <button data-id="${encodeURIComponent(u.id)}" class="btn btn-sm btn-danger ms-1 btn-delete">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+        // Delegate delete clicks to the table body
+        tbody.addEventListener('click', async (ev) => {
+          const btn = ev.target.closest && ev.target.closest('.btn-delete');
+          if (!btn) return;
+          const id = btn.getAttribute('data-id');
+          if (!id) return;
+          if (!confirm('Delete this user? This action cannot be undone.')) return;
+          btn.disabled = true;
+          btn.textContent = 'Deleting...';
+          try {
+            const resp = await fetch('/admin/users/' + encodeURIComponent(id) + '/delete', {
+              method: 'POST',
+              credentials: 'same-origin',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({})
+            });
+            if (!resp.ok) {
+              const text = await resp.text();
+              alert('Delete failed: ' + resp.status + '\n' + text);
+              btn.disabled = false;
+              btn.textContent = 'Delete';
+              return;
+            }
+            // remove the row from the table
+            const row = btn.closest('tr');
+            if (row) row.remove();
+          } catch (e) {
+            console.error('Delete request failed', e);
+            alert('Delete request failed');
+            btn.disabled = false;
+            btn.textContent = 'Delete';
+          }
+        });
+      } catch (e) {
+        loadingRow.innerHTML = '<td colspan="6" class="text-center text-danger">Error loading users</td>';
+        console.error('Error loading users JSON:', e);
+      }
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    document.addEventListener('DOMContentLoaded', loadUsers);
+  </script>
+<%- include('partials/footer') %>

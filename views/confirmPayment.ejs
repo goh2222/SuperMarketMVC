@@ -1,0 +1,71 @@
+<%- include('partials/header', { pageTitle: 'Jeffery Market' }) %>
+
+  <div class="container py-4">
+    <h2>Payment Confirmation</h2>
+
+    <% const successMsgs = (typeof messages !== 'undefined' && messages && messages.success) ? messages.success : (typeof success !== 'undefined' ? success : (typeof flash !== 'undefined' && flash && flash.success ? flash.success : [])); %>
+    <% const errorMsgs = (typeof messages !== 'undefined' && messages && messages.error) ? messages.error : (typeof error !== 'undefined' ? error : (typeof flash !== 'undefined' && flash && flash.error ? flash.error : [])); %>
+    <% if (successMsgs && successMsgs.length) { %>
+      <% successMsgs.forEach(function(m){ %>
+        <div class="alert alert-success"><%= m %></div>
+      <% }) %>
+    <% } %>
+    <% if (errorMsgs && errorMsgs.length) { %>
+      <% errorMsgs.forEach(function(m){ %>
+        <div class="alert alert-danger"><%= m %></div>
+      <% }) %>
+    <% } %>
+
+    <% if (!cart || cart.length === 0) { %>
+      <div class="alert alert-warning">Your cart is empty. <a href="/shopping">Continue shopping</a>.</div>
+    <% } else { %>
+      <h5 class="mt-3">Items</h5>
+      <ul class="list-group">
+        <% let total = 0; %>
+        <% cart.forEach(function(it){ %>
+          <% const disc = (it.discount || 0) * 1; %>
+          <% const original = (typeof it.originalPrice !== 'undefined' ? Number(it.originalPrice) : Number(it.price)); %>
+          <% const linePrice = Number(it.price || 0) * Number(it.quantity || 0); %>
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <strong><%= it.productName %></strong>
+              <div class="text-muted">Qty: <%= it.quantity %> × 
+                <% if (disc && disc > 0) { %>
+                  <small class="text-muted"><s>$<%= original.toFixed(2) %></s></small>
+                  <span class="ms-2">$<%= Number(it.price).toFixed(2) %></span>
+                <% } else { %>
+                  $<%= Number(it.price).toFixed(2) %>
+                <% } %>
+              </div>
+            </div>
+            <div>$<%= linePrice.toFixed(2) %></div>
+          </li>
+          <% total += linePrice; %>
+        <% }); %>
+      </ul>
+
+      <h4 class="mt-3">Total: $<%= total.toFixed(2) %></h4>
+
+      <h5 class="mt-4">Confirm Your Contact Details</h5>
+      <div class="card p-3">
+        <p><strong>Name:</strong> <%= user && user.username ? user.username : 'Guest' %></p>
+        <p><strong>Email:</strong> <%= user && user.email ? user.email : '—' %></p>
+        <p><strong>Address:</strong> <%= user && user.address ? user.address : '—' %></p>
+        <p><strong>Contact:</strong> <%= user && user.contact ? user.contact : '—' %></p>
+        <p class="text-muted">If any details are incorrect, update your profile before completing the purchase.</p>
+      </div>
+
+      <div class="mt-4 d-flex gap-2">
+        <a href="/cart" class="btn btn-secondary">Back to Cart</a>
+        <a href="/profile?returnTo=/confirm-payment" class="btn btn-outline-primary">Edit Details</a>
+        <!-- Post to /success which runs the purchase logic and renders the `purchase.ejs` view -->
+        <form id="purchase-form" action="/success" method="POST" style="display:inline; margin:0;" onsubmit="return disablePurchaseBtn();">
+          <button id="purchase-btn" type="submit" class="btn btn-success">Confirm and Pay</button>
+        </form>
+      </div>
+
+      
+      
+    <% } %>
+  </div>
+<%- include('partials/footer') %>

@@ -1,0 +1,57 @@
+<%- include('partials/header', { pageTitle: 'Jeffery Market - Add Product' }) %>
+
+  <!-- Main Content -->
+  <div class="container mt-4">
+    <h2 class="text-center mb-4">Add New Product</h2>
+    <form action="/addProduct" method="POST" enctype="multipart/form-data" class="mx-auto" style="max-width: 500px;">
+
+      <div class="mb-3">
+        <label for="name" class="form-label">Product Name</label>
+        <input type="text" class="form-control" id="name" name="name" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="quantity" class="form-label">Quantity</label>
+        <input type="number" class="form-control" id="quantity" name="quantity" min="0" step="1" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="price" class="form-label">Price ($)</label>
+        <input type="number" class="form-control" id="price" name="price" min="0" step="0.01" required>
+      </div>
+
+      <div class="mb-3">
+        <label for="discount" class="form-label">Discount (%)</label>
+        <input type="number" class="form-control" id="discount" name="discount" min="0" max="100" step="0.01" placeholder="0.00">
+        <div class="form-text">Optional: enter a percentage (e.g. 10 for 10% off)</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="description" class="form-label">Description</label>
+        <textarea class="form-control" id="description" name="description" rows="4" placeholder="Enter a short description for this product (optional)"></textarea>
+        <div class="form-text">Optional: provide details customers will see on the product page.</div>
+      </div>
+
+      <div class="mb-3">
+        <label for="category" class="form-label">Category</label>
+        <select id="category" name="category" class="form-select" required>
+          <option value="Fruits">Fruits</option>
+          <option value="Vegetables">Vegetables</option>
+          <option value="Drinks">Drinks</option>
+          <option value="Snacks">Snacks</option>
+          <option value="Others">Others</option>
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label for="image" class="form-label">Product Image</label>
+        <input class="form-control" type="file" id="image" name="image" accept="image/*" required>
+      </div>
+
+      <div class="d-grid">
+        <button type="submit" class="btn btn-primary">Add Product</button>
+      </div>
+
+    </form>
+  </div>
+<%- include('partials/footer') %>
